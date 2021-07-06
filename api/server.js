@@ -1,3 +1,55 @@
 // BUILD YOUR SERVER HERE
+const express = require("express");
+const users = require("./users/model");
+const server = express();
 
-module.exports = {}; // EXPORT YOUR SERVER instead of {}
+server.use(express.json());
+
+server.get("/api/hello", (req, res) => {
+    console.log(req.method);
+    res.status(200).json({ message: "Sanity check."});
+})
+
+
+server.get("/api/users", (req, res) => {
+    users.find()
+        .then(user => {
+            res.status(200).json(user);
+        })
+        .catch(err => {
+            res.status(500).json({message: err.message});
+        });
+})
+
+server.get("/api/users/:id", (req, res) => {
+    const id = req.params.id;
+    users.findById(id)
+        .then(user => {
+            if (!user) {
+                res.status(404).json({message: `User with id ${id} does not exist.`});
+            } else {
+                res.status(200).json(user);
+            }
+        })
+        .catch(err => {
+            res.status(500).json({message: err.message});
+        })
+})
+
+server.post("/api/users", (req, res) => {
+    if (!req.body.name || !req.body.bio) {
+        res.status(400).json({message: "Please provide name and bio for the user"});
+    } else {
+        const { name, bio } = req.body;
+        users.insert({ name, bio })
+        .then(user => {
+            res.status(201).json(user);
+        })
+        .catch(err => {
+            res.status(500).json({message: err.message});
+        });
+    }
+});
+
+
+module.exports = server; // EXPORT YOUR SERVER instead of {}
